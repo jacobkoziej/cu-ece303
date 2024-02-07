@@ -12,6 +12,7 @@ from loguru import logger
 
 
 BUFSIZE: typing.Final[int] = 4096
+ENCODING: typing.Final[str] = 'utf-8'
 
 
 def main():
@@ -50,7 +51,7 @@ def main():
         logger.info(f'got a new connection from `{address[0]}:{address[1]}`')
 
         try:
-            request = conn.recv(BUFSIZE).decode('utf-8')
+            request = conn.recv(BUFSIZE).decode(ENCODING)
 
             file = request.split()[1]
             file = file[1:]  # strip '/'
@@ -61,7 +62,7 @@ def main():
                 data = f.read()
 
             response = 'HTTP/1.0 200 OK\n\n' + data
-            conn.sendall(response.encode())
+            conn.sendall(response.encode(ENCODING))
 
             conn.close()
 
