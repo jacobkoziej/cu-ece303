@@ -61,13 +61,16 @@ def main():
             with open(file) as f:
                 data = f.read()
 
-            response = 'HTTP/1.0 200 OK\n\n' + data
-            conn.sendall(response.encode(ENCODING))
-
-            conn.close()
+            response = 'HTTP/1.0 200 OK\r\n\r\n' + data
 
         except IOError:
             logger.warning(f'`{file}` not found!')
+
+            response = 'HTTP/1.0 404 NOT FOUND\r\n\r\n'
+
+        finally:
+            conn.sendall(response.encode(ENCODING))
+            conn.close()
 
     sock.close()
 
