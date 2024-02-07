@@ -57,6 +57,14 @@ def main():
 
             logger.info(f'requested file: `{file}`')
 
+            with open(file) as f:
+                data = f.read()
+
+            response = 'HTTP/1.0 200 OK\n\n' + data
+            conn.sendall(response.encode())
+
+            conn.close()
+
         except IOError:
             logger.warning(f'`{file}` not found!')
 
