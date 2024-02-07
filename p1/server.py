@@ -47,14 +47,14 @@ def main():
     )
 
     parser.add_argument(
-        "-a",
-        "--address",
+        '-a',
+        '--address',
         required=True,
         type=str,
     )
     parser.add_argument(
-        "-p",
-        "--port",
+        '-p',
+        '--port',
         required=True,
         type=int,
     )
