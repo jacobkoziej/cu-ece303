@@ -6,6 +6,12 @@
 
 import argparse
 import socket
+import typing
+
+from loguru import logger
+
+
+BUFSIZE: typing.Final[int] = 4096
 
 
 def main():
@@ -36,6 +42,23 @@ def main():
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind((args.address, args.port))
     sock.listen()
+
+    logger.info(f'bound socket on `{args.address}:{args.port}`')
+
+    while True:
+        conn, address = sock.accept()
+        logger.info(f'got a new connection from `{address[0]}:{address[1]}`')
+
+        try:
+            request = conn.recv(BUFSIZE).decode('utf-8')
+
+            file = request.split()[1]
+            file = file[1:]  # strip '/'
+
+            logger.info(f'requested file: `{file}`')
+
+        except IOError:
+            logger.warning(f'`{file}` not found!')
 
     sock.close()
 
