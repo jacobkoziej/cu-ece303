@@ -6,6 +6,7 @@
 
 import argparse
 import socket
+import threading
 import typing
 
 from loguru import logger
@@ -13,6 +14,30 @@ from loguru import logger
 
 BUFSIZE: typing.Final[int] = 4096
 ENCODING: typing.Final[str] = 'utf-8'
+
+
+def handle_client(conn: socket.socket, address: tuple[str, int]) -> None:
+    try:
+        request = conn.recv(BUFSIZE).decode(ENCODING)
+
+        file = request.split()[1]
+        file = file[1:]  # strip '/'
+
+        logger.info(f'requested file: `{file}`')
+
+        with open(file) as f:
+            data = f.read()
+
+        response = 'HTTP/1.0 200 OK\r\n\r\n' + data
+
+    except IOError:
+        logger.warning(f'`{file}` not found!')
+
+        response = 'HTTP/1.0 404 NOT FOUND\r\n\r\n'
+
+    finally:
+        conn.sendall(response.encode(ENCODING))
+        conn.close()
 
 
 def main():
@@ -46,33 +71,25 @@ def main():
 
     logger.info(f'bound socket on `{args.address}:{args.port}`')
 
-    while True:
-        conn, address = sock.accept()
-        logger.info(f'got a new connection from `{address[0]}:{address[1]}`')
+    try:
+        while True:
+            conn, address = sock.accept()
+            logger.info(
+                f'got a new connection from `{address[0]}:{address[1]}`'
+            )
 
-        try:
-            request = conn.recv(BUFSIZE).decode(ENCODING)
+            thread = threading.Thread(
+                target=handle_client,
+                args=(conn, address),
+            )
+            thread.start()
+    except KeyboardInterrupt:
+        pass
 
-            file = request.split()[1]
-            file = file[1:]  # strip '/'
+    finally:
+        sock.close()
 
-            logger.info(f'requested file: `{file}`')
-
-            with open(file) as f:
-                data = f.read()
-
-            response = 'HTTP/1.0 200 OK\r\n\r\n' + data
-
-        except IOError:
-            logger.warning(f'`{file}` not found!')
-
-            response = 'HTTP/1.0 404 NOT FOUND\r\n\r\n'
-
-        finally:
-            conn.sendall(response.encode(ENCODING))
-            conn.close()
-
-    sock.close()
+        logger.info('closed socket')
 
 
 if __name__ == '__main__':
