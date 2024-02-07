@@ -33,6 +33,7 @@ def main():
         family=socket.AF_INET,
         type=socket.SOCK_STREAM,
     )
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind((args.address, args.port))
     sock.listen()
 
